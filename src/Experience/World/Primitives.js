@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
-import { randomColorRgb } from '../Utils/Utils'
+import { randomColorRgb } from '../Utils/utils'
 
 export { createSpheresWithPhysics, createBoxesWithPhysics }
 

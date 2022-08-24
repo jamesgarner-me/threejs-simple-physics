@@ -2,7 +2,8 @@ import Experience from '../Experience'
 import Environment from './Environment'
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
-import { createSpheresWithPhysics, createBoxesWithPhysics } from './Primitives'
+import soundEffects from './sounds'
+import { createSpheresWithPhysics, createBoxesWithPhysics } from './primitives'
 
 export default class World {
    constructor() {
@@ -14,7 +15,6 @@ export default class World {
       this.time = this.experience.time
       this.debug = this.experience.debug
 
-      // this.Primitives = new Primitives()
       this.world = new CANNON.World()
       this.world.broadphase = new CANNON.SAPBroadphase(this.world)
       this.world.allowSleep = true
@@ -26,7 +26,7 @@ export default class World {
 
       this.createDefaultMaterials()
 
-      this.createFloorWithPhysics()
+      this.createEffects()
 
       this.createWorldObjectsWithPhysics()
 
@@ -42,7 +42,6 @@ export default class World {
    }
 
    setDefaultOptions() {
-      // Options related to world
       this.options = {
          objectLimit: 500,
          isSoundEnabled: false,
@@ -59,23 +58,40 @@ export default class World {
          .min(50)
          .max(2000)
          .step(1)
-         .name('Object Limit')
+         .name('Object limit')
       this.debugFolder
          .add(this.options, 'numberOfObjectsToGenerate')
          .min(0)
          .max(5)
          .step(1)
          .name('Objects to generate')
+      this.debugFolder.add(this.options, 'isSoundEnabled').name('Sound enabled')
       this.debugFolder.add(this.generateObjects, 'reset').name('Reset')
       this.debugFolder
          .add(this.generateObjects, 'createSpheresHandler')
-         .name('Create Sphere')
+         .name('Create sphere')
       this.debugFolder
          .add(this.generateObjects, 'createBoxesHandler')
-         .name('Create Box')
+         .name('Create box')
       this.debugFolder
          .add(this.generateObjects, 'createAutomatically')
-         .name('Create Automatically')
+         .name('Create automatically')
+   }
+
+   createEffects() {
+      this.effects = {
+         collisionSoundEffect: (collision) => {
+            if (this.options.isSoundEnabled) {
+               const impactStrength =
+                  collision.contact.getImpactVelocityAlongNormal()
+               if (impactStrength > 1.5) {
+                  soundEffects.collisionSound.volume = Math.random()
+                  soundEffects.collisionSound.currentTime = 0
+                  soundEffects.collisionSound.play()
+               }
+            }
+         },
+      }
    }
 
    createDefaultMaterials() {
@@ -123,6 +139,8 @@ export default class World {
    }
 
    createWorldObjectsWithPhysics() {
+      this.createFloorWithPhysics()
+
       this.generateObjects = {
          createAutomatically: () => {
             // Automatically create spheres and boxes
@@ -134,6 +152,10 @@ export default class World {
                this.resources.items.environmentMapTexture
             )
             newSpheres.map((object) => {
+               object.body.addEventListener(
+                  'collide',
+                  this.effects.collisionSoundEffect
+               )
                this.scene.add(object.mesh)
                this.world.addBody(object.body)
             })
@@ -146,6 +168,10 @@ export default class World {
                this.resources.items.environmentMapTexture
             )
             newBoxes.map((object) => {
+               object.body.addEventListener(
+                  'collide',
+                  this.effects.collisionSoundEffect
+               )
                this.scene.add(object.mesh)
                this.world.addBody(object.body)
             })
@@ -177,7 +203,10 @@ export default class World {
                this.options.isCreateAutomaticallyEnabled = false
             }
             this.objectsInSceneAndWorld.map((object) => {
-               // object.body.removeEventListener('collide', playHitSound)
+               object.body.removeEventListener(
+                  'collide',
+                  this.effects.collisionSoundEffect
+               )
                this.world.removeBody(object.body)
                this.scene.remove(object.mesh)
             })
@@ -189,22 +218,25 @@ export default class World {
       }
    }
 
+   /** Cull objects from scene over limit (help framerate) */
    enforceObjectsLimit() {
-      // Apply an object limit - remove objects over limit
       if (this.options.objectLimit) {
          const numberOfObjectsToRemove =
             this.objectsInSceneAndWorld.length - this.options.objectLimit
          if (numberOfObjectsToRemove > 0) {
-            // Remove the objects in scope from scene, world (slice is immutable)
+            // Remove the objects in scope from scene, world
             this.objectsInSceneAndWorld
                .slice(0, numberOfObjectsToRemove)
                .map((object) => {
-                  // object.body.removeEventListener('collide', playHitSound)
+                  object.body.removeEventListener(
+                     'collide',
+                     this.effects.collisionSoundEffect
+                  )
                   this.world.removeBody(object.body)
                   this.scene.remove(object.mesh)
                })
          }
-         // Return all objects minus the oldest ones that have been culled (splice is mutable)
+         // Return all objects minus the oldest ones that have been culled
          this.objectsInSceneAndWorld.splice(0, numberOfObjectsToRemove)
       }
    }
