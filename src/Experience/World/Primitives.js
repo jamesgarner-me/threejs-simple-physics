@@ -30,7 +30,6 @@ const createSphereBody = (radius, position) => {
       position,
       shape,
    })
-   // body.addEventListener('collide', playHitSound)
    return body
 }
 
@@ -83,7 +82,6 @@ const createBoxBody = (w, h, d, position) => {
       mass: 1,
       shape,
    })
-   // body.addEventListener('collide', playHitSound)
    body.position.copy(position)
    return body
 }
