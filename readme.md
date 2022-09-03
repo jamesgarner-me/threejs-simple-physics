@@ -15,6 +15,8 @@ npm run dev
 npm run build
 ```
 
+![Alt text](static/images/threejs-simple-physics-hero.png "Screenshot")
+
 ## Examples
 More [ThreeJS examples](https://threejs.org/examples/)
 
