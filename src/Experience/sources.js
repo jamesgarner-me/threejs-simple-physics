@@ -23,4 +23,14 @@ export default [
          '/textures/skybox/nz_back.png',
       ],
    },
+   {
+      name: 'marbleFloorColor',
+      type: 'texture',
+      path: '/textures/substance-graph/Substance_Graph_BaseColor.jpg',
+   },
+   {
+      name: 'marbleFloorNormal',
+      type: 'texture',
+      path: '/textures/substance-graph/Substance_Graph_Normal.jpg',
+   },
 ]

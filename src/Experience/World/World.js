@@ -109,21 +109,37 @@ export default class World {
    }
 
    createFloorWithPhysics() {
-      // Mesh
-      const floor = new THREE.Mesh(
-         new THREE.PlaneGeometry(30, 30),
-         new THREE.MeshStandardMaterial({
-            color: '#777777',
-            metalness: 0.3,
-            roughness: 0.4,
-            // envMap: this.resources.items.environmentMapTexture,
-            envMapIntensity: 0.5,
-         })
-      )
-      floor.receiveShadow = true
-      floor.rotation.x = -Math.PI * 0.5
+      const textures = {}
+      textures.color = this.resources.items.marbleFloorColor
+      textures.color.encoding = THREE.sRGBEncoding
+      textures.color.repeat.set(4, 4)
+      textures.color.wrapS = THREE.RepeatWrapping
+      textures.color.wrapT = THREE.RepeatWrapping
 
-      // Body
+      textures.normal = this.resources.items.marbleFloorNormal
+      textures.normal.encoding = THREE.sRGBEncoding
+      textures.normal.repeat.set(4, 4)
+      textures.normal.wrapS = THREE.RepeatWrapping
+      textures.normal.wrapT = THREE.RepeatWrapping
+
+      // Mesh
+      const floorMaterial = new THREE.MeshStandardMaterial({
+         map: textures.color,
+         normalMap: textures.normal,
+         metalness: 0.6,
+         roughness: 0.7,
+         envMap: this.resources.items.environmentMapTexture,
+         envMapIntensity: 0.5,
+      })
+      floorMaterial.side = THREE.DoubleSide
+
+      const floor = new THREE.Mesh(
+         new THREE.CircleGeometry(20, 64),
+         floorMaterial
+      )
+      floor.rotation.x = -Math.PI * 0.5
+      floor.receiveShadow = true
+
       const floorShape = new CANNON.Plane()
       const floorBody = new CANNON.Body({
          mass: 0,
@@ -133,7 +149,6 @@ export default class World {
          new CANNON.Vec3(-1, 0, 0),
          Math.PI * 0.5
       )
-
       this.scene.add(floor)
       this.world.addBody(floorBody)
    }
